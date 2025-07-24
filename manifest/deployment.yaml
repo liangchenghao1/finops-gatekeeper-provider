@@ -1,0 +1,27 @@
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: finops-gatekeeper-provider
+  namespace: kube-system
+spec:
+  replicas: 3
+  selector:
+    matchLabels:
+      app: finops-gatekeeper-provider
+  template:
+    metadata:
+      labels:
+        app: finops-gatekeeper-provider
+    spec:
+      containers:
+        - image: ringtail/finops-gatekeeper-provider:0.0.1
+          imagePullPolicy: IfNotPresent
+          name: finops-gatekeeper-provider
+          ports:
+            - containerPort: 8090
+              protocol: TCP
+      restartPolicy: Always
+      nodeSelector:
+        kubernetes.io/os: linux
+      serviceAccountName: finops-gatekeeper-provider-sa

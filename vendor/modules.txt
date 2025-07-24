@@ -1,0 +1,154 @@
+# github.com/cespare/xxhash/v2 v2.3.0
+## explicit; go 1.11
+github.com/cespare/xxhash/v2
+# github.com/fxamacker/cbor/v2 v2.7.0
+## explicit; go 1.17
+github.com/fxamacker/cbor/v2
+# github.com/go-logr/logr v1.4.3
+## explicit; go 1.18
+github.com/go-logr/logr
+# github.com/go-logr/zapr v1.2.4
+## explicit; go 1.16
+github.com/go-logr/zapr
+# github.com/gogo/protobuf v1.3.2
+## explicit; go 1.15
+github.com/gogo/protobuf/proto
+github.com/gogo/protobuf/sortkeys
+# github.com/json-iterator/go v1.1.12
+## explicit; go 1.12
+github.com/json-iterator/go
+# github.com/modern-go/concurrent v0.0.0-20180306012644-bacd9c7ef1dd
+## explicit
+github.com/modern-go/concurrent
+# github.com/modern-go/reflect2 v1.0.2
+## explicit; go 1.12
+github.com/modern-go/reflect2
+# github.com/open-policy-agent/frameworks/constraint v0.0.0-20250723173231-f2d853937c6e
+## explicit; go 1.24.0
+github.com/open-policy-agent/frameworks/constraint/pkg/apis/externaldata/unversioned
+github.com/open-policy-agent/frameworks/constraint/pkg/externaldata
+# github.com/open-policy-agent/opa v1.6.0
+## explicit; go 1.23.8
+github.com/open-policy-agent/opa/capabilities
+github.com/open-policy-agent/opa/internal/debug
+github.com/open-policy-agent/opa/internal/deepcopy
+github.com/open-policy-agent/opa/internal/gojsonschema
+github.com/open-policy-agent/opa/internal/semver
+github.com/open-policy-agent/opa/internal/wasm/sdk/opa/capabilities
+github.com/open-policy-agent/opa/v1/ast
+github.com/open-policy-agent/opa/v1/ast/internal/scanner
+github.com/open-policy-agent/opa/v1/ast/internal/tokens
+github.com/open-policy-agent/opa/v1/ast/json
+github.com/open-policy-agent/opa/v1/ast/location
+github.com/open-policy-agent/opa/v1/capabilities
+github.com/open-policy-agent/opa/v1/loader/extension
+github.com/open-policy-agent/opa/v1/metrics
+github.com/open-policy-agent/opa/v1/types
+github.com/open-policy-agent/opa/v1/util
+github.com/open-policy-agent/opa/v1/util/decoding
+# github.com/rcrowley/go-metrics v0.0.0-20200313005456-10cdbea86bc0
+## explicit
+github.com/rcrowley/go-metrics
+# github.com/x448/float16 v0.8.4
+## explicit; go 1.11
+github.com/x448/float16
+# github.com/xeipuuv/gojsonpointer v0.0.0-20190905194746-02993c407bfb
+## explicit
+github.com/xeipuuv/gojsonpointer
+# github.com/xeipuuv/gojsonreference v0.0.0-20180127040603-bd5ef7bd5415
+## explicit
+github.com/xeipuuv/gojsonreference
+# go.uber.org/atomic v1.9.0
+## explicit; go 1.13
+go.uber.org/atomic
+# go.uber.org/multierr v1.9.0
+## explicit; go 1.19
+go.uber.org/multierr
+# go.uber.org/zap v1.24.0
+## explicit; go 1.19
+go.uber.org/zap
+go.uber.org/zap/buffer
+go.uber.org/zap/internal
+go.uber.org/zap/internal/bufferpool
+go.uber.org/zap/internal/color
+go.uber.org/zap/internal/exit
+go.uber.org/zap/zapcore
+# go.yaml.in/yaml/v2 v2.4.2
+## explicit; go 1.15
+go.yaml.in/yaml/v2
+# golang.org/x/net v0.42.0
+## explicit; go 1.23.0
+golang.org/x/net/http/httpguts
+golang.org/x/net/http2
+golang.org/x/net/http2/hpack
+golang.org/x/net/idna
+golang.org/x/net/internal/httpcommon
+# golang.org/x/text v0.27.0
+## explicit; go 1.23.0
+golang.org/x/text/secure/bidirule
+golang.org/x/text/transform
+golang.org/x/text/unicode/bidi
+golang.org/x/text/unicode/norm
+# gopkg.in/inf.v0 v0.9.1
+## explicit
+gopkg.in/inf.v0
+# gopkg.in/yaml.v3 v3.0.1
+## explicit
+gopkg.in/yaml.v3
+# k8s.io/apimachinery v0.33.3
+## explicit; go 1.24.0
+k8s.io/apimachinery/pkg/api/operation
+k8s.io/apimachinery/pkg/api/resource
+k8s.io/apimachinery/pkg/apis/meta/v1
+k8s.io/apimachinery/pkg/conversion
+k8s.io/apimachinery/pkg/conversion/queryparams
+k8s.io/apimachinery/pkg/fields
+k8s.io/apimachinery/pkg/labels
+k8s.io/apimachinery/pkg/runtime
+k8s.io/apimachinery/pkg/runtime/schema
+k8s.io/apimachinery/pkg/runtime/serializer/cbor/direct
+k8s.io/apimachinery/pkg/runtime/serializer/cbor/internal/modes
+k8s.io/apimachinery/pkg/selection
+k8s.io/apimachinery/pkg/types
+k8s.io/apimachinery/pkg/util/errors
+k8s.io/apimachinery/pkg/util/intstr
+k8s.io/apimachinery/pkg/util/json
+k8s.io/apimachinery/pkg/util/naming
+k8s.io/apimachinery/pkg/util/net
+k8s.io/apimachinery/pkg/util/runtime
+k8s.io/apimachinery/pkg/util/sets
+k8s.io/apimachinery/pkg/util/validation
+k8s.io/apimachinery/pkg/util/validation/field
+k8s.io/apimachinery/pkg/util/wait
+k8s.io/apimachinery/pkg/watch
+k8s.io/apimachinery/third_party/forked/golang/reflect
+# k8s.io/klog/v2 v2.130.1
+## explicit; go 1.18
+k8s.io/klog/v2
+k8s.io/klog/v2/internal/buffer
+k8s.io/klog/v2/internal/clock
+k8s.io/klog/v2/internal/dbg
+k8s.io/klog/v2/internal/serialize
+k8s.io/klog/v2/internal/severity
+k8s.io/klog/v2/internal/sloghandler
+# k8s.io/utils v0.0.0-20241104100929-3ea5e8cea738
+## explicit; go 1.18
+k8s.io/utils/clock
+k8s.io/utils/internal/third_party/forked/golang/net
+k8s.io/utils/net
+k8s.io/utils/ptr
+# sigs.k8s.io/json v0.0.0-20241010143419-9aa6b5e7a4b3
+## explicit; go 1.21
+sigs.k8s.io/json
+sigs.k8s.io/json/internal/golang/encoding/json
+# sigs.k8s.io/randfill v1.0.0
+## explicit; go 1.18
+sigs.k8s.io/randfill
+sigs.k8s.io/randfill/bytesource
+# sigs.k8s.io/structured-merge-diff/v4 v4.6.0
+## explicit; go 1.13
+sigs.k8s.io/structured-merge-diff/v4/value
+# sigs.k8s.io/yaml v1.5.0
+## explicit; go 1.22
+sigs.k8s.io/yaml
+sigs.k8s.io/yaml/goyaml.v2
