@@ -1,0 +1,24 @@
+server:
+  port: 8090
+  timeout: 5
+
+webhooks:
+  - name: "default-resources-mutator"
+    path: "/mutate/resources"
+    type: "mutating"
+    enabled: true
+  
+  - name: "default-labels-mutator"
+    path: "/mutate/labels"
+    type: "mutating"
+    enabled: true
+  
+  - name: "resources-validator"
+    path: "/validate/resources"
+    type: "validating"
+    enabled: true
+  
+  - name: "labels-validator"
+    path: "/validate/labels"
+    type: "validating"
+    enabled: true
