@@ -2,10 +2,11 @@ package policy
 
 import (
 	"net/http"
+	"strings"
 
 	"github.com/go-logr/logr"
 	"github.com/open-policy-agent/frameworks/constraint/pkg/externaldata"
-	
+
 	"github.com/AliyunContainerService/finops-gatekeeper-provider/pkg/utls"
 )
 
@@ -35,18 +36,23 @@ func (v *LabelsValidator) Validate(w http.ResponseWriter, req *http.Request) {
 	for _, key := range providerRequest.Request.Keys {
 		// 这里应该实现具体的验证逻辑，检查应用是否设置了app标签
 		// 如果没有设置，应该拒绝该请求并发送Event到k8s集群
-		
+
 		// 示例实现：假设所有应用都通过验证
 		validationResult := "valid"
-		
+		if strings.Contains(key, "app") {
+			validationResult = "valid"
+		} else {
+			validationResult = "invalid"
+		}
+
 		// 如果验证失败，可以设置为"invalid"并添加详细信息
 		// validationResult = "Required label 'app' not specified for application " + key
-		
+
 		results = append(results, externaldata.Item{
 			Key:   key,
 			Value: validationResult,
 		})
-		
+
 		v.Logger.Info("Validated labels for app", "app", key, "result", validationResult)
 	}
 

@@ -12,13 +12,17 @@ import (
 	"github.com/go-logr/logr"
 	"github.com/go-logr/zapr"
 	"go.uber.org/zap"
-	
+
 	"github.com/AliyunContainerService/finops-gatekeeper-provider/pkg/config"
 	"github.com/AliyunContainerService/finops-gatekeeper-provider/pkg/policy"
 	"github.com/AliyunContainerService/finops-gatekeeper-provider/pkg/server"
 )
 
-var log logr.Logger
+var (
+	log      logr.Logger
+	certFile = "cert/server.crt"
+	keyFile  = "cert/server.key"
+)
 
 func main() {
 	// 初始化日志
@@ -59,9 +63,34 @@ func main() {
 	// 启动服务器
 	go func() {
 		log.Info("starting server", "port", cfg.Server.Port)
-		if err := s.Start(); err != nil && err != http.ErrServerClosed {
-			log.Error(err, "server failed to start")
-			panic(err)
+		// 检查是否使用TLS
+		useTLS := "true"
+		if value := os.Getenv("USE_TLS"); value != "" {
+			useTLS = value
+		}
+
+		if useTLS == "true" {
+			log.Info("starting HTTPS server with TLS", "certFile", certFile, "keyFile", keyFile)
+			// 检查证书文件是否存在
+			if _, err := os.Stat(certFile); os.IsNotExist(err) {
+				log.Error(err, "TLS certificate file not found", "certFile", certFile)
+				panic(fmt.Sprintf("TLS certificate file not found: %s", certFile))
+			}
+			if _, err := os.Stat(keyFile); os.IsNotExist(err) {
+				log.Error(err, "TLS key file not found", "keyFile", keyFile)
+				panic(fmt.Sprintf("TLS key file not found: %s", keyFile))
+			}
+
+			if err := s.StartTLS(certFile, keyFile); err != nil && err != http.ErrServerClosed {
+				log.Error(err, "HTTPS server failed to start")
+				panic(err)
+			}
+		} else {
+			log.Info("starting HTTP server")
+			if err := s.Start(); err != nil && err != http.ErrServerClosed {
+				log.Error(err, "server failed to start")
+				panic(err)
+			}
 		}
 	}()
 

@@ -15,14 +15,14 @@ type Server struct {
 	server *http.Server
 	logger logr.Logger
 	mux    *http.ServeMux
-	
+
 	// 用于保护webhook映射的互斥锁
 	mu sync.RWMutex
-	
+
 	// 存储已注册的webhook
 	mutatingWebhooks   map[string]MutatingWebhook
 	validatingWebhooks map[string]ValidatingWebhook
-	
+
 	// 默认超时时间
 	timeout time.Duration
 }
@@ -65,18 +65,18 @@ func NewServer(config Config) *Server {
 func (s *Server) RegisterMutatingWebhook(path string, webhook MutatingWebhook) error {
 	s.mu.Lock()
 	defer s.mu.Unlock()
-	
+
 	// 检查路径是否已被占用
 	if _, exists := s.mutatingWebhooks[path]; exists {
 		return fmt.Errorf("mutating webhook already registered for path: %s", path)
 	}
-	
+
 	// 注册webhook
 	s.mutatingWebhooks[path] = webhook
-	
+
 	// 注册HTTP处理函数
 	s.mux.HandleFunc(path, s.processTimeout(webhook.Mutate, s.timeout))
-	
+
 	s.logger.Info("registered mutating webhook", "path", path)
 	return nil
 }
@@ -85,18 +85,18 @@ func (s *Server) RegisterMutatingWebhook(path string, webhook MutatingWebhook) e
 func (s *Server) RegisterValidatingWebhook(path string, webhook ValidatingWebhook) error {
 	s.mu.Lock()
 	defer s.mu.Unlock()
-	
+
 	// 检查路径是否已被占用
 	if _, exists := s.validatingWebhooks[path]; exists {
 		return fmt.Errorf("validating webhook already registered for path: %s", path)
 	}
-	
+
 	// 注册webhook
 	s.validatingWebhooks[path] = webhook
-	
+
 	// 注册HTTP处理函数
 	s.mux.HandleFunc(path, s.processTimeout(webhook.Validate, s.timeout))
-	
+
 	s.logger.Info("registered validating webhook", "path", path)
 	return nil
 }
@@ -105,15 +105,15 @@ func (s *Server) RegisterValidatingWebhook(path string, webhook ValidatingWebhoo
 func (s *Server) UnregisterMutatingWebhook(path string) error {
 	s.mu.Lock()
 	defer s.mu.Unlock()
-	
+
 	// 检查路径是否存在
 	if _, exists := s.mutatingWebhooks[path]; !exists {
 		return fmt.Errorf("no mutating webhook registered for path: %s", path)
 	}
-	
+
 	// 取消注册webhook
 	delete(s.mutatingWebhooks, path)
-	
+
 	s.logger.Info("unregistered mutating webhook", "path", path)
 	return nil
 }
@@ -122,15 +122,15 @@ func (s *Server) UnregisterMutatingWebhook(path string) error {
 func (s *Server) UnregisterValidatingWebhook(path string) error {
 	s.mu.Lock()
 	defer s.mu.Unlock()
-	
+
 	// 检查路径是否存在
 	if _, exists := s.validatingWebhooks[path]; !exists {
 		return fmt.Errorf("no validating webhook registered for path: %s", path)
 	}
-	
+
 	// 取消注册webhook
 	delete(s.validatingWebhooks, path)
-	
+
 	s.logger.Info("unregistered validating webhook", "path", path)
 	return nil
 }
@@ -139,12 +139,12 @@ func (s *Server) UnregisterValidatingWebhook(path string) error {
 func (s *Server) ListMutatingWebhooks() []string {
 	s.mu.RLock()
 	defer s.mu.RUnlock()
-	
+
 	paths := make([]string, 0, len(s.mutatingWebhooks))
 	for path := range s.mutatingWebhooks {
 		paths = append(paths, path)
 	}
-	
+
 	return paths
 }
 
@@ -152,12 +152,12 @@ func (s *Server) ListMutatingWebhooks() []string {
 func (s *Server) ListValidatingWebhooks() []string {
 	s.mu.RLock()
 	defer s.mu.RUnlock()
-	
+
 	paths := make([]string, 0, len(s.validatingWebhooks))
 	for path := range s.validatingWebhooks {
 		paths = append(paths, path)
 	}
-	
+
 	return paths
 }
 
@@ -165,6 +165,12 @@ func (s *Server) ListValidatingWebhooks() []string {
 func (s *Server) Start() error {
 	s.logger.Info("starting webhook server", "port", s.server.Addr)
 	return s.server.ListenAndServe()
+}
+
+// StartTLS 启动HTTPS Webhook服务器
+func (s *Server) StartTLS(certFile, keyFile string) error {
+	s.logger.Info("starting webhook server with TLS", "port", s.server.Addr)
+	return s.server.ListenAndServeTLS(certFile, keyFile)
 }
 
 // Stop 停止Webhook服务器
