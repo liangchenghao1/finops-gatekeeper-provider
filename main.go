@@ -20,8 +20,8 @@ import (
 
 var (
 	log      logr.Logger
-	certFile = "cert/server.crt"
-	keyFile  = "cert/server.key"
+	certFile = "/certs/tls.crt"
+	keyFile  = "/certs/tls.key"
 )
 
 func main() {
@@ -141,6 +141,12 @@ func loadConfig() (*config.Config, error) {
 			{
 				Name:    "labels-validator",
 				Path:    "/validate/labels",
+				Type:    "validating",
+				Enabled: true,
+			},
+			{
+				Name:    "workload-budget-validator",
+				Path:    "/validate/workload-budget",
 				Type:    "validating",
 				Enabled: true,
 			},

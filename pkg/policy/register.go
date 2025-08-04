@@ -15,6 +15,7 @@ var (
 	defaultLabelsMutator    *DefaultLabelsMutator
 	resourcesValidator      *ResourcesValidator
 	labelsValidator         *LabelsValidator
+	workloadBudgetValidator *WorkloadBudgetValidator
 )
 
 // RegisterWebhooks 注册所有策略webhook
@@ -23,6 +24,7 @@ func RegisterWebhooks(logger logr.Logger) {
 	defaultLabelsMutator = NewDefaultLabelsMutator(logger)
 	resourcesValidator = NewResourcesValidator(logger)
 	labelsValidator = NewLabelsValidator(logger)
+	workloadBudgetValidator = NewWorkloadBudgetValidator(logger)
 }
 
 // GetDefaultResourcesMutator 获取默认资源mutator
@@ -49,7 +51,7 @@ func GetLabelsValidator() server.ValidatingWebhook {
 func RegisterWebhooksFromConfig(registry server.WebhookRegistry, cfg *config.Config, logger logr.Logger) error {
 	// 初始化所有webhook处理器
 	RegisterWebhooks(logger)
-	
+
 	// 遍历配置中的webhook并注册
 	for _, webhookCfg := range cfg.Webhooks {
 		// 跳过禁用的webhook
@@ -57,7 +59,7 @@ func RegisterWebhooksFromConfig(registry server.WebhookRegistry, cfg *config.Con
 			logger.Info("skipping disabled webhook", "name", webhookCfg.Name, "path", webhookCfg.Path)
 			continue
 		}
-		
+
 		// 根据webhook名称和类型确定处理器
 		var err error
 		switch {
@@ -69,19 +71,21 @@ func RegisterWebhooksFromConfig(registry server.WebhookRegistry, cfg *config.Con
 			err = registry.RegisterValidatingWebhook(webhookCfg.Path, GetResourcesValidator())
 		case webhookCfg.Type == "validating" && strings.Contains(webhookCfg.Name, "labels"):
 			err = registry.RegisterValidatingWebhook(webhookCfg.Path, GetLabelsValidator())
+		case webhookCfg.Type == "validating" && strings.Contains(webhookCfg.Name, "workload-budget"):
+			err = registry.RegisterValidatingWebhook(webhookCfg.Path, workloadBudgetValidator)
 		default:
 			return fmt.Errorf("unknown webhook type or name: %s (%s)", webhookCfg.Name, webhookCfg.Type)
 		}
-		
+
 		if err != nil {
 			return fmt.Errorf("failed to register webhook %s: %w", webhookCfg.Name, err)
 		}
-		
-		logger.Info("registered webhook", 
-			"name", webhookCfg.Name, 
-			"path", webhookCfg.Path, 
+
+		logger.Info("registered webhook",
+			"name", webhookCfg.Name,
+			"path", webhookCfg.Path,
 			"type", webhookCfg.Type)
 	}
-	
+
 	return nil
 }

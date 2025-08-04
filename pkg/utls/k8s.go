@@ -3,11 +3,14 @@ package utls
 import (
 	"context"
 	"fmt"
-
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/client-go/kubernetes"
 	"k8s.io/client-go/rest"
+	"k8s.io/client-go/tools/clientcmd"
+	"k8s.io/klog/v2"
+	"os"
+	"path/filepath"
 )
 
 // K8sClient Kubernetes客户端包装
@@ -20,7 +23,18 @@ func NewK8sClient() (*K8sClient, error) {
 	// 创建集群内配置
 	config, err := rest.InClusterConfig()
 	if err != nil {
-		return nil, fmt.Errorf("failed to create in-cluster config: %v", err)
+		klog.Errorf("Failed to create in cluster config: %v", err)
+
+		homeDir, err := os.UserHomeDir()
+		if err != nil {
+			return nil, fmt.Errorf("failed to get user home directory: %v", err)
+		}
+
+		kubeconfig := filepath.Join(homeDir, ".kube", "config")
+		config, err = clientcmd.BuildConfigFromFlags("", kubeconfig)
+		if err != nil {
+			return nil, fmt.Errorf("failed to create Kubernetes config from %s: %v", err, kubeconfig)
+		}
 	}
 
 	// 创建clientset
