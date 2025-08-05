@@ -44,16 +44,16 @@ func (k *K8sClient) QueryCost(ctx context.Context, query CostQuery) (*Allocation
 	}
 
 	// 执行请求
-	// todo 增加更详细的错误透出
+	// todo 增加更详细的错误透出如权限不足
 	raw, err := req.DoRaw(ctx)
 	if err != nil {
-		return nil, fmt.Errorf("成本查询失败: %w", err)
+		return nil, fmt.Errorf("failed to query cost: %v. query :%+v", err, query)
 	}
 
 	// 解析JSON响应
 	var resp AllocationSetRange
 	if err := json.Unmarshal(raw, &resp); err != nil {
-		return nil, fmt.Errorf("解析响应失败: %w", err)
+		return nil, fmt.Errorf("failed to parse response to AllocationSetRange: %v", err)
 	}
 	return &resp, nil
 }

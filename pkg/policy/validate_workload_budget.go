@@ -76,7 +76,7 @@ func (v *WorkloadBudgetValidator) Validate(w http.ResponseWriter, req *http.Requ
 			Value: cost,
 		})
 
-		v.Logger.Info("Validated labels for app", "app", key, "result", cost)
+		v.Logger.Info("Validated budget for workload", "workload", key, "result", cost)
 	}
 
 	utls.SendResponse(w, &results, "")
