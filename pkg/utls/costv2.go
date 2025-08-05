@@ -44,6 +44,7 @@ func (k *K8sClient) QueryCost(ctx context.Context, query CostQuery) (*Allocation
 	}
 
 	// 执行请求
+	// todo 增加更详细的错误透出
 	raw, err := req.DoRaw(ctx)
 	if err != nil {
 		return nil, fmt.Errorf("成本查询失败: %w", err)
@@ -137,6 +138,3 @@ func buildFilterString(filters []CostFilter) string {
 	}
 	return strings.Join(parts, "+")
 }
-
-// 辅助函数创建布尔指针
-func BoolPtr(b bool) *bool { return &b }
