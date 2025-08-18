@@ -11,20 +11,24 @@ import (
 
 var (
 	// 全局变量存储注册的webhook处理器
-	defaultResourcesMutator *DefaultResourcesMutator
-	defaultLabelsMutator    *DefaultLabelsMutator
-	resourcesValidator      *ResourcesValidator
-	labelsValidator         *LabelsValidator
-	workloadBudgetValidator *WorkloadBudgetValidator
+	defaultResourcesMutator              *DefaultResourcesMutator
+	defaultLabelsMutator                 *DefaultLabelsMutator
+	resourcesValidator                   *ResourcesValidator
+	labelsValidator                      *LabelsValidator
+	workloadBudgetValidator              *WorkloadBudgetValidator
+	workloadResourceUtilizationValidator *WorkloadResourceUtilizationValidator
+	workloadRecommendationValidator      *WorkloadRecommendationValidator
 )
 
 // RegisterWebhooks 注册所有策略webhook
-func RegisterWebhooks(logger logr.Logger) {
+func RegisterWebhooks(logger logr.Logger, config *config.Config) {
 	defaultResourcesMutator = NewDefaultResourcesMutator(logger)
 	defaultLabelsMutator = NewDefaultLabelsMutator(logger)
 	resourcesValidator = NewResourcesValidator(logger)
 	labelsValidator = NewLabelsValidator(logger)
 	workloadBudgetValidator = NewWorkloadBudgetValidator(logger)
+	workloadResourceUtilizationValidator = NewWorkloadResourceUtilizationValidator(logger, config)
+	workloadRecommendationValidator = NewWorkloadRecommendationValidator(logger)
 }
 
 // GetDefaultResourcesMutator 获取默认资源mutator
@@ -50,7 +54,7 @@ func GetLabelsValidator() server.ValidatingWebhook {
 // RegisterWebhooksFromConfig 根据配置文件注册webhook
 func RegisterWebhooksFromConfig(registry server.WebhookRegistry, cfg *config.Config, logger logr.Logger) error {
 	// 初始化所有webhook处理器
-	RegisterWebhooks(logger)
+	RegisterWebhooks(logger, cfg)
 
 	// 遍历配置中的webhook并注册
 	for _, webhookCfg := range cfg.Webhooks {
@@ -73,6 +77,11 @@ func RegisterWebhooksFromConfig(registry server.WebhookRegistry, cfg *config.Con
 			err = registry.RegisterValidatingWebhook(webhookCfg.Path, GetLabelsValidator())
 		case webhookCfg.Type == "validating" && strings.Contains(webhookCfg.Name, "workload-budget"):
 			err = registry.RegisterValidatingWebhook(webhookCfg.Path, workloadBudgetValidator)
+		case webhookCfg.Type == "validating" && strings.Contains(webhookCfg.Name, "workload-resource-utilization"):
+			err = registry.RegisterValidatingWebhook(webhookCfg.Path, workloadResourceUtilizationValidator)
+		case webhookCfg.Type == "validating" && strings.Contains(webhookCfg.Name, "workload-recommendation"):
+			err = registry.RegisterValidatingWebhook(webhookCfg.Path, workloadRecommendationValidator)
+
 		default:
 			return fmt.Errorf("unknown webhook type or name: %s (%s)", webhookCfg.Name, webhookCfg.Type)
 		}

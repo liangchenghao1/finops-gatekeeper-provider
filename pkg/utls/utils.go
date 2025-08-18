@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"io"
 	"net/http"
+	"strings"
 
 	"github.com/open-policy-agent/frameworks/constraint/pkg/externaldata"
 )
@@ -54,4 +55,12 @@ func SendResponse(w http.ResponseWriter, results *[]externaldata.Item, systemErr
 	if err := json.NewEncoder(w).Encode(response); err != nil {
 		panic(err)
 	}
+}
+
+func ParseWorkloadKey(key string) (kind, namespace, name string, err error) {
+	parts := strings.SplitN(key, "/", 3)
+	if len(parts) != 3 || parts[0] == "" || parts[1] == "" || parts[2] == "" {
+		return "", "", "", fmt.Errorf("invalid workload key %q, expect <namespace>/<name>", key)
+	}
+	return parts[0], parts[1], parts[2], nil
 }

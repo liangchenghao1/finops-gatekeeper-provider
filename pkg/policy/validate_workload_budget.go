@@ -2,13 +2,10 @@ package policy
 
 import (
 	"context"
-	"fmt"
+	"github.com/AliyunContainerService/finops-gatekeeper-provider/pkg/utls"
 	"github.com/go-logr/logr"
 	"github.com/open-policy-agent/frameworks/constraint/pkg/externaldata"
 	"net/http"
-	"strings"
-
-	"github.com/AliyunContainerService/finops-gatekeeper-provider/pkg/utls"
 )
 
 // WorkloadBudgetValidator 验证应用是否设置了必要的标签
@@ -42,7 +39,7 @@ func (v *WorkloadBudgetValidator) Validate(w http.ResponseWriter, req *http.Requ
 
 	results := make([]externaldata.Item, 0)
 	for _, key := range providerRequest.Request.Keys {
-		namespace, controllerName, err := parseWorkloadKey(key)
+		_, namespace, controllerName, err := utls.ParseWorkloadKey(key)
 		if err != nil {
 			v.Logger.Error(err, "failed to parse workload key", "key", key)
 			return
@@ -80,12 +77,4 @@ func (v *WorkloadBudgetValidator) Validate(w http.ResponseWriter, req *http.Requ
 	}
 
 	utls.SendResponse(w, &results, "")
-}
-
-func parseWorkloadKey(key string) (namespace, workload string, err error) {
-	parts := strings.SplitN(key, "/", 2)
-	if len(parts) != 2 || parts[0] == "" || parts[1] == "" {
-		return "", "", fmt.Errorf("invalid workload key %q, expect <namespace>/<name>", key)
-	}
-	return parts[0], parts[1], nil
 }
