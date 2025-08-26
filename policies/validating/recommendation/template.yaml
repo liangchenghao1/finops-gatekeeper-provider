@@ -1,0 +1,38 @@
+apiVersion: templates.gatekeeper.sh/v1beta1
+kind: ConstraintTemplate
+metadata:
+  name: workloadrecommendation
+spec:
+  crd:
+    spec:
+      names:
+        kind: WorkloadRecommendation
+  targets:
+    - target: admission.k8s.gatekeeper.sh
+      rego: |
+        package admission
+        
+        import future.keywords.in
+        
+        violation[{"msg": msg}] {
+          workload_kind := input.review.object.spec.scaleTargetRef.kind
+
+          # 3. 获取工作负载标识
+          workload_key := sprintf("%s/%s/%s", [workload_kind, input.review.object.metadata.namespace, input.review.object.metadata.name])
+        
+          # 4. 查询资源利用率
+          response := external_data({"provider": "finops-workload-recommendation-provider", "keys": [workload_key]})
+        
+          # 5. 检查外部服务错误
+          response_with_error(response)
+          
+          msg := sprintf("invalid input: %v", [input.review])
+        }
+        
+        response_with_error(response) {
+          count(response.errors) > 0 
+        }
+
+        response_with_error(response) {
+          count(response.system_error) > 0
+        }

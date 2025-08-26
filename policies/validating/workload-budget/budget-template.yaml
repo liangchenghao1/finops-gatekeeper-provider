@@ -1,0 +1,60 @@
+apiVersion: templates.gatekeeper.sh/v1beta1  # 保持版本一致
+kind: ConstraintTemplate
+metadata:
+  name: workloadbudget
+spec:
+  crd:
+    spec:
+      names:
+        kind: WorkloadBudget
+  targets:
+    - target: admission.k8s.gatekeeper.sh
+      rego: |
+        package admission
+        
+        import future.keywords.in
+        
+        violation[{"msg": msg}] {
+          # 1. 检查扩容操作
+          is_scale_up_operation
+        
+          # 2. 从Constraint参数获取预算值
+          budget := 0.1
+        
+          # 3. 获取工作负载标识
+          workload_key := sprintf("%s/%s", [input.review.object.metadata.namespace, input.review.object.metadata.name])
+        
+          # 4. 查询外部成本
+          response := external_data({"provider": "finops-workload-budget-provider", "keys": [workload_key]})
+        
+          # 5. 检查外部服务错误
+          count(response.errors) == 0
+                
+          # 6. 获取成本值
+          resp := response.responses[_]
+          current_cost := resp[1]
+        
+          # 7. 验证成本有效性
+          current_cost >= 0
+        
+          # 8. 预算检查
+          current_cost > budget
+        
+          # 9. 错误消息
+          msg := sprintf("Workload '%s' cost %.3f exceeds budget %.2f", [workload_key, current_cost, budget])
+        }
+        
+        # 辅助规则：扩容操作检查。
+        is_scale_up_operation {
+          # 确保是更新操作
+          input.review.oldObject
+        
+          # 检查副本数字段存在
+          input.review.oldObject.spec.replicas
+          input.review.object.spec.replicas
+        
+          # 比较副本数
+          new_replicas := input.review.object.spec.replicas
+          old_replicas := input.review.oldObject.spec.replicas
+          new_replicas > old_replicas
+        }
