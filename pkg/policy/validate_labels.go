@@ -7,7 +7,7 @@ import (
 	"github.com/go-logr/logr"
 	"github.com/open-policy-agent/frameworks/constraint/pkg/externaldata"
 
-	"github.com/AliyunContainerService/finops-gatekeeper-provider/pkg/utls"
+	"github.com/AliyunContainerService/finops-gatekeeper-provider/pkg/utils"
 )
 
 // LabelsValidator 验证应用是否设置了必要的标签
@@ -25,7 +25,7 @@ func NewLabelsValidator(logger logr.Logger) *LabelsValidator {
 // Validate 验证应用是否包含必要的标签
 func (v *LabelsValidator) Validate(w http.ResponseWriter, req *http.Request) {
 	// 读取并解析请求
-	providerRequest, err := utls.ReadProviderRequest(w, req)
+	providerRequest, err := utils.ReadProviderRequest(w, req)
 	if err != nil {
 		v.Logger.Error(err, "failed to read provider request")
 		return
@@ -56,5 +56,5 @@ func (v *LabelsValidator) Validate(w http.ResponseWriter, req *http.Request) {
 		v.Logger.Info("Validated labels for app", "app", key, "result", validationResult)
 	}
 
-	utls.SendResponse(w, &results, "")
+	utils.SendResponse(w, &results, "")
 }

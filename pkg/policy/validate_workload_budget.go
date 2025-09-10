@@ -2,7 +2,7 @@ package policy
 
 import (
 	"context"
-	"github.com/AliyunContainerService/finops-gatekeeper-provider/pkg/utls"
+	"github.com/AliyunContainerService/finops-gatekeeper-provider/pkg/utils"
 	"github.com/go-logr/logr"
 	"github.com/open-policy-agent/frameworks/constraint/pkg/externaldata"
 	"net/http"
@@ -10,13 +10,13 @@ import (
 
 // WorkloadBudgetValidator 验证应用是否设置了必要的标签
 type WorkloadBudgetValidator struct {
-	k8sClient *utls.K8sClient
+	k8sClient *utils.K8sClient
 	Logger    logr.Logger
 }
 
 // NewLabelsValidator 创建一个新的LabelsValidator实例
 func NewWorkloadBudgetValidator(logger logr.Logger) *WorkloadBudgetValidator {
-	k8sClient, err := utls.NewK8sClient()
+	k8sClient, err := utils.NewK8sClient()
 	if err != nil {
 		logger.Error(err, "failed to create k8s client")
 		return nil
@@ -31,7 +31,7 @@ func NewWorkloadBudgetValidator(logger logr.Logger) *WorkloadBudgetValidator {
 // Validate 验证应用是否包含必要的标签
 func (v *WorkloadBudgetValidator) Validate(w http.ResponseWriter, req *http.Request) {
 	// 读取并解析请求
-	providerRequest, err := utls.ReadProviderRequest(w, req)
+	providerRequest, err := utils.ReadProviderRequest(w, req)
 	if err != nil {
 		v.Logger.Error(err, "failed to read provider request")
 		return
@@ -39,17 +39,17 @@ func (v *WorkloadBudgetValidator) Validate(w http.ResponseWriter, req *http.Requ
 
 	results := make([]externaldata.Item, 0)
 	for _, key := range providerRequest.Request.Keys {
-		_, namespace, controllerName, err := utls.ParseWorkloadKey(key)
+		_, namespace, controllerName, err := utils.ParseWorkloadKey(key)
 		if err != nil {
 			v.Logger.Error(err, "failed to parse workload key", "key", key)
 			return
 		}
 
-		costResp, costErr := v.k8sClient.QueryCost(context.Background(), utls.CostQuery{
+		costResp, costErr := v.k8sClient.QueryCost(context.Background(), utils.CostQuery{
 			Window: "yesterday",
-			Filter: []utls.CostFilter{
-				{Type: utls.FilterNamespace, Value: `"` + namespace + `"`},
-				{Type: utls.FilterController, Value: `"` + controllerName + `"`},
+			Filter: []utils.CostFilter{
+				{Type: utils.FilterNamespace, Value: `"` + namespace + `"`},
+				{Type: utils.FilterController, Value: `"` + controllerName + `"`},
 			},
 			Aggregate: "controller",
 		})
@@ -76,5 +76,5 @@ func (v *WorkloadBudgetValidator) Validate(w http.ResponseWriter, req *http.Requ
 		v.Logger.Info("Validated budget for workload", "workload", key, "result", cost)
 	}
 
-	utls.SendResponse(w, &results, "")
+	utils.SendResponse(w, &results, "")
 }

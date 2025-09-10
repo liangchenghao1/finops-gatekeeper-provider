@@ -19,8 +19,11 @@ spec:
           imagePullPolicy: IfNotPresent
           volumeMounts:
             - name: tls
-              mountPath: /certs         # 目标路径
-              readOnly: true                    # 建议只读
+              mountPath: /certs
+              readOnly: true
+            - name: config
+              mountPath: /app/config.yaml
+              subPath: config.yaml
           name: finops-gatekeeper-provider
           ports:
             - containerPort: 8090
@@ -30,5 +33,8 @@ spec:
         - name: tls
           secret:
             secretName: finops-external-data-secret
+        - name: config
+          configMap:
+            name: finops-gatekeeper-provider-config
       nodeSelector:
         kubernetes.io/os: linux

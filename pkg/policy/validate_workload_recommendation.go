@@ -6,14 +6,14 @@ import (
 	"net/http"
 	"strings"
 
-	"github.com/AliyunContainerService/finops-gatekeeper-provider/pkg/utls"
+	"github.com/AliyunContainerService/finops-gatekeeper-provider/pkg/utils"
 	"github.com/go-logr/logr"
 	"github.com/open-policy-agent/frameworks/constraint/pkg/externaldata"
 	corev1 "k8s.io/api/core/v1"
 )
 
 type WorkloadRecommendationValidator struct {
-	k8sClient *utls.K8sClient
+	k8sClient *utils.K8sClient
 	logger    logr.Logger
 }
 
@@ -30,7 +30,7 @@ const (
 )
 
 func NewWorkloadRecommendationValidator(logger logr.Logger) *WorkloadRecommendationValidator {
-	k8sClient, err := utls.NewK8sClient()
+	k8sClient, err := utils.NewK8sClient()
 	if err != nil {
 		logger.Error(err, "failed to create k8s client")
 		return nil
@@ -43,17 +43,17 @@ func NewWorkloadRecommendationValidator(logger logr.Logger) *WorkloadRecommendat
 }
 
 func (v *WorkloadRecommendationValidator) Validate(w http.ResponseWriter, req *http.Request) {
-	providerRequest, err := utls.ReadProviderRequest(w, req)
+	providerRequest, err := utils.ReadProviderRequest(w, req)
 	if err != nil {
 		v.logger.Error(err, "failed to read provider request")
-		utls.SendResponse(w, nil, "invalid request format")
+		utils.SendResponse(w, nil, "invalid request format")
 		return
 	}
 
 	results := make([]externaldata.Item, 0, len(providerRequest.Request.Keys))
 
 	for _, key := range providerRequest.Request.Keys {
-		kind, namespace, controllerName, err := utls.ParseWorkloadKey(key)
+		kind, namespace, controllerName, err := utils.ParseWorkloadKey(key)
 
 		resourceID := ResourceIdentifier{
 			Namespace: namespace,
@@ -106,7 +106,7 @@ func (v *WorkloadRecommendationValidator) Validate(w http.ResponseWriter, req *h
 		}
 	}
 
-	utls.SendResponse(w, &results, "")
+	utils.SendResponse(w, &results, "")
 }
 
 func (v *WorkloadRecommendationValidator) getActualContainers(resource *ResourceIdentifier) ([]corev1.Container, error) {
@@ -137,7 +137,7 @@ func (v *WorkloadRecommendationValidator) getActualContainers(resource *Resource
 // 调整后的校验方法
 func (v *WorkloadRecommendationValidator) validateContainer(
 	container corev1.Container,
-	targets utls.RecommendationTargets,
+	targets utils.RecommendationTargets,
 ) []string {
 	var violations []string
 
@@ -160,7 +160,7 @@ func (v *WorkloadRecommendationValidator) checkResources(
 	resType string,
 	containerName string,
 	actual corev1.ResourceList,
-	target utls.ContainerTarget,
+	target utils.ContainerTarget,
 	violations *[]string,
 ) {
 	if cpu, ok := actual[corev1.ResourceCPU]; ok {

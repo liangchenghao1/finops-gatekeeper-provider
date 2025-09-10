@@ -6,8 +6,8 @@ import (
 
 	"github.com/go-logr/logr"
 	"github.com/open-policy-agent/frameworks/constraint/pkg/externaldata"
-	
-	"github.com/AliyunContainerService/finops-gatekeeper-provider/pkg/utls"
+
+	"github.com/AliyunContainerService/finops-gatekeeper-provider/pkg/utils"
 )
 
 // DefaultResourcesMutator 为没有设置资源请求的Pod设置默认值
@@ -25,7 +25,7 @@ func NewDefaultResourcesMutator(logger logr.Logger) *DefaultResourcesMutator {
 // Mutate 实现资源默认值设置逻辑
 func (m *DefaultResourcesMutator) Mutate(w http.ResponseWriter, req *http.Request) {
 	// 读取并解析请求
-	providerRequest, err := utls.ReadProviderRequest(w, req)
+	providerRequest, err := utils.ReadProviderRequest(w, req)
 	if err != nil {
 		m.Logger.Error(err, "failed to read provider request")
 		return
@@ -47,17 +47,17 @@ func (m *DefaultResourcesMutator) Mutate(w http.ResponseWriter, req *http.Reques
 				},
 			},
 		}
-		
+
 		value, _ := json.Marshal(defaultResources)
 		results = append(results, externaldata.Item{
 			Key:   key,
 			Value: string(value),
 		})
-		
+
 		m.Logger.Info("Added default resources for pod", "pod", key)
 	}
 
-	utls.SendResponse(w, &results, "")
+	utils.SendResponse(w, &results, "")
 }
 
 // sendResponse 发送响应给Gatekeeper

@@ -1,4 +1,4 @@
-package utls
+package utils
 
 import (
 	"fmt"
@@ -14,7 +14,7 @@ func ExampleK8sUsage(logger logr.Logger) {
 		logger.Error(err, "Failed to create K8s client")
 		return
 	}
-	
+
 	// 确保变量被使用
 	_ = client
 

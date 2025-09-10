@@ -4,7 +4,7 @@ import (
 	"context"
 	"fmt"
 	"github.com/AliyunContainerService/finops-gatekeeper-provider/pkg/config"
-	"github.com/AliyunContainerService/finops-gatekeeper-provider/pkg/utls"
+	"github.com/AliyunContainerService/finops-gatekeeper-provider/pkg/utils"
 	"github.com/go-logr/logr"
 	"github.com/open-policy-agent/frameworks/constraint/pkg/externaldata"
 	"github.com/prometheus/common/model"
@@ -38,13 +38,13 @@ const (
 
 // WorkloadResourceUtilizationValidator 验证应用是否设置了必要的标签
 type WorkloadResourceUtilizationValidator struct {
-	promClient *utls.PrometheusClient
+	promClient *utils.PrometheusClient
 	Logger     logr.Logger
 }
 
 // NewWorkloadResourceUtilizationValidator WorkloadResourceUtilizationValidator
 func NewWorkloadResourceUtilizationValidator(logger logr.Logger, config *config.Config) *WorkloadResourceUtilizationValidator {
-	promClient, err := utls.NewPrometheusClient(config.Prometheus.URL)
+	promClient, err := utils.NewPrometheusClient(config.Prometheus.URL)
 	if err != nil {
 		logger.Error(err, "failed to create prom client")
 		return nil
@@ -59,7 +59,7 @@ func NewWorkloadResourceUtilizationValidator(logger logr.Logger, config *config.
 // Validate 验证应用CPU利用率
 func (v *WorkloadResourceUtilizationValidator) Validate(w http.ResponseWriter, req *http.Request) {
 	// 读取并解析请求
-	providerRequest, err := utls.ReadProviderRequest(w, req)
+	providerRequest, err := utils.ReadProviderRequest(w, req)
 	if err != nil {
 		v.Logger.Error(err, "failed to read provider request")
 		return
@@ -67,7 +67,7 @@ func (v *WorkloadResourceUtilizationValidator) Validate(w http.ResponseWriter, r
 
 	results := make([]externaldata.Item, 0)
 	for _, key := range providerRequest.Request.Keys {
-		_, namespace, controllerName, err := utls.ParseWorkloadKey(key)
+		_, namespace, controllerName, err := utils.ParseWorkloadKey(key)
 		if err != nil {
 			v.Logger.Error(err, "failed to parse workload key", "key", key)
 			return
@@ -126,5 +126,5 @@ func (v *WorkloadResourceUtilizationValidator) Validate(w http.ResponseWriter, r
 			"utilization", avgUtilization)
 	}
 
-	utls.SendResponse(w, &results, "")
+	utils.SendResponse(w, &results, "")
 }

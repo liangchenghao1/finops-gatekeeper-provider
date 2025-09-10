@@ -7,8 +7,8 @@ import (
 
 	"github.com/go-logr/logr"
 	"github.com/open-policy-agent/frameworks/constraint/pkg/externaldata"
-	
-	"github.com/AliyunContainerService/finops-gatekeeper-provider/pkg/utls"
+
+	"github.com/AliyunContainerService/finops-gatekeeper-provider/pkg/utils"
 )
 
 // DefaultLabelsMutator 为没有设置app标签的应用添加默认标签
@@ -26,7 +26,7 @@ func NewDefaultLabelsMutator(logger logr.Logger) *DefaultLabelsMutator {
 // Mutate 实现默认标签设置逻辑
 func (m *DefaultLabelsMutator) Mutate(w http.ResponseWriter, req *http.Request) {
 	// 读取并解析请求
-	providerRequest, err := utls.ReadProviderRequest(w, req)
+	providerRequest, err := utils.ReadProviderRequest(w, req)
 	if err != nil {
 		m.Logger.Error(err, "failed to read provider request")
 		return
@@ -40,7 +40,7 @@ func (m *DefaultLabelsMutator) Mutate(w http.ResponseWriter, req *http.Request) 
 		if parts := strings.Split(key, "/"); len(parts) > 1 {
 			appName = parts[1] // 取name部分
 		}
-		
+
 		// 创建默认标签
 		defaultLabels := map[string]interface{}{
 			"metadata": map[string]interface{}{
@@ -49,15 +49,15 @@ func (m *DefaultLabelsMutator) Mutate(w http.ResponseWriter, req *http.Request) 
 				},
 			},
 		}
-		
+
 		value, _ := json.Marshal(defaultLabels)
 		results = append(results, externaldata.Item{
 			Key:   key,
 			Value: string(value),
 		})
-		
+
 		m.Logger.Info("Added default label for app", "app", appName)
 	}
 
-	utls.SendResponse(w, &results, "")
+	utils.SendResponse(w, &results, "")
 }
