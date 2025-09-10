@@ -39,4 +39,4 @@ webhooks:
     enabled: true
 
 prometheus:
-  url: "http://cn-hangzhou.arms.aliyuncs.com:9090/api/v1/prometheus/e98797b2e23c602456bdb5d712b3a8/1373160529477805/c1eceacb68fab47cdbe6babeba9aaa448/cn-hangzhou"
+  url: ""

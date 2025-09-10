@@ -1,0 +1,26 @@
+apiVersion: constraints.gatekeeper.sh/v1beta1
+kind: K8sResourceEnums
+metadata:
+  name: pod-resource-enums
+spec:
+  enforcementAction: warn
+  match:
+    kinds:
+      - apiGroups: [""]
+        kinds: ["Pod"]
+    # 排除命名空间
+    excludedNamespaces: ["kube-system", "kube-public"]
+  parameters:
+    allowedCPUs:
+      - "100m"
+      - "200m"
+      - "500m"
+      - "1"
+      - "2"
+    allowedMemories:
+      - "128Mi"
+      - "256Mi"
+      - "512Mi"
+      - "1Gi"
+      - "2Gi"
+      - "4Gi"

@@ -9,15 +9,34 @@ FinOps Gatekeeper Provider 为 Open Policy Agent Gatekeeper 提供策略模版�
 - **多策略支持**: 支持 Mutating 和 Validating 策略
 - **动态配置**: 可通过配置文件动态注册多个策略处理器
 
-### FinOps 策略模板
+### FinOps 场景策略模版
 - **工作负载预算控制**: 防止工作负载扩容时超出成本预算
 - **资源利用率验证**: 基于实际资源利用率控制扩容操作
 - **智能推荐验证**: 验证资源推荐配置的有效性
 - **默认资源配置**: 自动为容器设置合理的资源请求和限制
-- **标签管理**: 自动添加和管理 FinOps 相关标签
+- **标签管理**: 基于指定标签的准入策略
 - **更多策略补充中**
 
-## 快速开始
+## 策略管理
+策略模版定义和下发策略，请参考policys/下的策略模板定义和下发策略。
+示例：
+```bash
+# 下发规范 container resource 为指定枚举值的限制策略
+kubectl apply -f policies/validating/container-resource-enums/template.yaml
+kubectl apply -f policies/validating/container-podrequirelabels/constraint.yaml
+
+# 下发规范 Pod 包括指定 label 的限制策略
+kubectl apply -f policies/validating/pod-require-labels/template.yaml
+kubectl apply -f policies/validating/pod-require-labels/constraint.yaml
+```
+
+如果策略模版需要使用外部数据服务，需要在对应provider.yaml的caBundle字段配置ca.crt。证书生成参考 构建和部署 章节。
+
+
+
+## 构建和部署
+### 说明
+本节适用于测试或开发external data provider的场景，如果您的策略模版不需要使用外部数据服务，可以直接参考policys/下的策略模板定义和下发策略。
 
 ### 构建
 
@@ -70,9 +89,6 @@ kubectl apply -f policies/validating/workload-budget/
 kubectl apply -f policies/validating/workload-utilization/
 kubectl apply -f policies/validating/recommendation/
 ```
-
-
-## 配置
 
 ### 配置文件格式
 
@@ -137,59 +153,6 @@ prometheus:
 | `*workload-resource-utilization*` | validating | 资源利用率验证器 |
 | `*workload-recommendation*` | validating | 工作负载推荐验证器 |
 
-## FinOps 策略模板
-
-### 1. 工作负载预算控制 (WorkloadBudget)
-
-防止工作负载扩容时超出成本预算：
-
-```yaml
-apiVersion: constraints.gatekeeper.sh/v1beta1
-kind: WorkloadBudget
-metadata:
-  name: workload-budget-example
-spec:
-  match:
-    kinds:
-      - apiGroups: ["apps"]
-        kinds: ["Deployment"]
-  parameters:
-    budget: 0.1  # 预算阈值
-```
-
-### 2. 资源利用率验证 (WorkloadUtilization)
-
-基于实际资源利用率控制扩容操作：
-
-```yaml
-apiVersion: constraints.gatekeeper.sh/v1beta1
-kind: WorkloadUtilization
-metadata:
-  name: workload-utilization-example
-spec:
-  match:
-    kinds:
-      - apiGroups: ["apps"]
-        kinds: ["Deployment"]
-  parameters:
-    threshold: 0.6  # 利用率阈值
-```
-
-### 3. 工作负载推荐验证 (WorkloadRecommendation)
-
-验证资源推荐配置的有效性：
-
-```yaml
-apiVersion: constraints.gatekeeper.sh/v1beta1
-kind: WorkloadRecommendation
-metadata:
-  name: workload-recommendation-example
-spec:
-  match:
-    kinds:
-      - apiGroups: ["autoscaling"]
-        kinds: ["HorizontalPodAutoscaler"]
-```
 
 ## 开发
 

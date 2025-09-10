@@ -1,0 +1,37 @@
+apiVersion: templates.gatekeeper.sh/v1beta1
+kind: ConstraintTemplate
+metadata:
+  name: requiredlabels
+spec:
+  crd:
+    spec:
+      names:
+        kind: RequiredLabels
+      validation:
+        openAPIV3Schema:
+          type: object
+          properties:
+            requiredLabels:
+              type: array
+              items:
+                type: string
+            message:
+              type: string
+  targets:
+    - target: admission.k8s.gatekeeper.sh
+      rego: |
+        package requiredlabels
+        
+        # 主检查逻辑
+        violation[{"msg": msg}] {
+          pod := input.review.object
+          # 检查每个必需的标签键
+          required_label := input.parameters.requiredLabels[_]
+          not has_label(pod, required_label)
+          msg := sprintf("%s: Pod must contain label key '%s'", [input.parameters.message, required_label])
+        }
+        
+        # 检查标签键是否存在
+        has_label(pod, label_key) {
+          pod.metadata.labels[label_key]
+        }
