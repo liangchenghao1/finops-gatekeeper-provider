@@ -1,0 +1,93 @@
+apiVersion: templates.gatekeeper.sh/v1beta1
+kind: ConstraintTemplate
+metadata:
+  name: k8sresourceenums
+spec:
+  crd:
+    spec:
+      names:
+        kind: K8sResourceEnums
+      validation:
+        openAPIV3Schema:
+          type: object
+          properties:
+            allowedCPUs:
+              type: array
+              items:
+                type: string
+            allowedMemories:
+              type: array
+              items:
+                type: string
+  targets:
+    - target: admission.k8s.gatekeeper.sh
+      rego: |
+        package k8sresourceenums
+        
+        # 主检查逻辑
+        violation[{"msg": msg}] {
+          container := input.review.object.spec.containers[_]
+          not valid_cpu(container)
+          msg := sprintf("container %s cpu must be one of the following values: %v", [container.name, concat(", ", input.parameters.allowedCPUs)])
+        }
+        
+        violation[{"msg": msg}] {
+          container := input.review.object.spec.containers[_]
+          not valid_memory(container)
+          msg := sprintf("container %s memory must be one of the following values: %v", [container.name, concat(", ", input.parameters.allowedMemories)])
+        }
+        
+        # 验证 CPU 资源
+        valid_cpu(container) {
+          # 检查 CPU 请求
+          is_allowed_value(container.resources.requests.cpu, input.parameters.allowedCPUs)
+          # 检查 CPU 限制
+          is_allowed_value(container.resources.limits.cpu, input.parameters.allowedCPUs)
+        }
+        
+        # 验证内存资源
+        valid_memory(container) {
+          # 检查内存请求
+          is_allowed_value(container.resources.requests.memory, input.parameters.allowedMemories)
+          # 检查内存限制
+          is_allowed_value(container.resources.limits.memory, input.parameters.allowedMemories)
+        }
+        
+        # 检查值是否在允许列表中
+        is_allowed_value(value, allowed_list) {
+          value == null
+        } else {
+          value_normalized = normalize_resource_value(value)
+          allowed_list[_] == value_normalized
+        }
+        
+        # 标准化资源值（处理不同格式但等效的值）
+        normalize_resource_value(value) = normalized {
+          # 处理 CPU 值
+          regex.find_n("^([0-9]+)m$", value, 2)
+          [_, num] = regex.find_n("^([0-9]+)m$", value, 2)
+          normalized = sprintf("%sm", [num])
+        } else = normalized {
+          # 处理不带单位的 CPU 值
+          regex.find_n("^[0-9]+\\.?[0-9]*$", value, 0)
+          normalized = sprintf("%s", [value])
+        } else = normalized {
+          # 处理内存值
+          regex.find_n("^([0-9]+)([a-zA-Z]{1,2})$", value, 2)
+          [_, amount, unit] = regex.find_n("^([0-9]+)([a-zA-Z]{1,2})$", value, 3)
+          # 标准化内存单位
+          unit_normalized = memory_unit_map[unit]
+          normalized = sprintf("%s%s", [amount, unit_normalized])
+        } else = value
+        
+        # 内存单位映射表（标准化为 Mi 或 Gi）
+        memory_unit_map = {
+          "K": "Ki",
+          "M": "Mi",
+          "G": "Gi",
+          "T": "Ti",
+          "Ki": "Ki",
+          "Mi": "Mi",
+          "Gi": "Gi",
+          "Ti": "Ti"
+        }

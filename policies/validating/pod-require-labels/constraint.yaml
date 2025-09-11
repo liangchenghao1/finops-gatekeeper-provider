@@ -1,0 +1,16 @@
+apiVersion: constraints.gatekeeper.sh/v1beta1
+kind: RequiredLabels
+metadata:
+  name: pod-required-labels
+spec:
+  enforcementAction: warn
+  match:
+    kinds:
+      - apiGroups: [""]
+        kinds: ["Pod"]
+    # 排除命名空间
+    excludedNamespaces: ["kube-system", "gatekeeper-system", "kube-public"]
+  parameters:
+    requiredLabels:
+      - "environment"             # 必须包含的标签键
+    message: "failed to check label key"        # 自定义错误消息

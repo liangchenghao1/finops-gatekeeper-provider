@@ -1,0 +1,42 @@
+server:
+  port: 8090
+  timeout: 300
+
+webhooks:
+  - name: "default-resources-mutator"
+    path: "/mutate/resources"
+    type: "mutating"
+    enabled: true
+  
+  - name: "default-labels-mutator"
+    path: "/mutate/labels"
+    type: "mutating"
+    enabled: true
+  
+  - name: "resources-validator"
+    path: "/validate/resources"
+    type: "validating"
+    enabled: true
+  
+  - name: "labels-validator"
+    path: "/validate/labels"
+    type: "validating"
+    enabled: true
+
+  - name: "workload-budget-validator"
+    path: "/validate/workload-budget"
+    type: "validating"
+    enabled: true
+
+  - name: "workload-resource-utilization-validator"
+    path: "/validate/workload-resource-utilization"
+    type: "validating"
+    enabled: true
+
+  - name: "workload-recommendation-validator"
+    path: "/validate/workload-recommendation"
+    type: "validating"
+    enabled: true
+
+prometheus:
+  url: ""

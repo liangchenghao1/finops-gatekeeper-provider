@@ -1,0 +1,66 @@
+apiVersion: templates.gatekeeper.sh/v1beta1
+kind: ConstraintTemplate
+metadata:
+  name: workloadutilization
+spec:
+  crd:
+    spec:
+      names:
+        kind: WorkloadUtilization
+      validation:
+        legacySchema: true
+  targets:
+    - rego: |
+        package admission
+
+        import future.keywords.in
+
+        violation[{"msg": msg}] {
+          # 1. 检查扩容操作
+          is_scale_up_operation
+
+          # 2. 阈值配置
+          threshold := 0.6
+
+          # 3. 获取工作负载标识
+          workload_key := sprintf("%s/%s/%s", [input.review.object.kind, input.review.object.metadata.namespace, input.review.object.metadata.name])
+
+          # 4. 查询资源利用率
+          response := external_data({"provider": "finops-workload-utilization-provider", "keys": [workload_key]})
+
+          # 5. 检查外部服务错误
+          count(response.errors) == 0
+        
+          # 6. 获取资源利用率
+          resp := response.responses[_]
+          current_utilization_str := resp[1]
+          current_utilization := parse_utilization(current_utilization_str)
+
+          # 8. 预算检查
+          current_utilization < threshold
+
+          # 9. 错误消息
+          msg := sprintf("Workload '%s' utilization %.3f lower than threshold %.2f", [workload_key, current_utilization, threshold])
+        }
+
+        # 辅助规则：扩容操作检查。
+        is_scale_up_operation {
+          # 确保是更新操作
+          input.review.oldObject
+
+          # 检查副本数字段存在
+          input.review.oldObject.spec.replicas
+          input.review.object.spec.replicas
+
+          # 比较副本数
+          new_replicas := input.review.object.spec.replicas
+          old_replicas := input.review.oldObject.spec.replicas
+          new_replicas > old_replicas
+        }
+
+        parse_utilization(s) = result {
+          trimmed := trim_suffix(s, "%")
+          raw := to_number(trimmed)
+          result := to_number(raw / 100.0)
+        }
+      target: admission.k8s.gatekeeper.sh

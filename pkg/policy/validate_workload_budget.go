@@ -1,0 +1,80 @@
+package policy
+
+import (
+	"context"
+	"github.com/AliyunContainerService/finops-gatekeeper-provider/pkg/utils"
+	"github.com/go-logr/logr"
+	"github.com/open-policy-agent/frameworks/constraint/pkg/externaldata"
+	"net/http"
+)
+
+// WorkloadBudgetValidator 验证应用是否设置了必要的标签
+type WorkloadBudgetValidator struct {
+	k8sClient *utils.K8sClient
+	Logger    logr.Logger
+}
+
+// NewLabelsValidator 创建一个新的LabelsValidator实例
+func NewWorkloadBudgetValidator(logger logr.Logger) *WorkloadBudgetValidator {
+	k8sClient, err := utils.NewK8sClient()
+	if err != nil {
+		logger.Error(err, "failed to create k8s client")
+		return nil
+	}
+
+	return &WorkloadBudgetValidator{
+		Logger:    logger,
+		k8sClient: k8sClient,
+	}
+}
+
+// Validate 验证应用是否包含必要的标签
+func (v *WorkloadBudgetValidator) Validate(w http.ResponseWriter, req *http.Request) {
+	// 读取并解析请求
+	providerRequest, err := utils.ReadProviderRequest(w, req)
+	if err != nil {
+		v.Logger.Error(err, "failed to read provider request")
+		return
+	}
+
+	results := make([]externaldata.Item, 0)
+	for _, key := range providerRequest.Request.Keys {
+		_, namespace, controllerName, err := utils.ParseWorkloadKey(key)
+		if err != nil {
+			v.Logger.Error(err, "failed to parse workload key", "key", key)
+			return
+		}
+
+		costResp, costErr := v.k8sClient.QueryCost(context.Background(), utils.CostQuery{
+			Window: "yesterday",
+			Filter: []utils.CostFilter{
+				{Type: utils.FilterNamespace, Value: `"` + namespace + `"`},
+				{Type: utils.FilterController, Value: `"` + controllerName + `"`},
+			},
+			Aggregate: "controller",
+		})
+		if costErr != nil {
+			v.Logger.Error(costErr, "failed to query cost")
+			return
+		}
+
+		if len(costResp.Allocations) != 1 {
+			v.Logger.Error(costErr, "failed to query cost")
+		}
+		items := *costResp.Allocations[0]
+		var cost float64
+		for _, item := range items {
+			cost = item.Cost
+			break
+		}
+
+		results = append(results, externaldata.Item{
+			Key:   key,
+			Value: cost,
+		})
+
+		v.Logger.Info("Validated budget for workload", "workload", key, "result", cost)
+	}
+
+	utils.SendResponse(w, &results, "")
+}

@@ -1,0 +1,8 @@
+apiVersion: externaldata.gatekeeper.sh/v1beta1
+kind: Provider
+metadata:
+  name: finops-workload-budget-provider
+spec:
+  url: https://finops-gatekeeper-provider.kube-system:8090/validate/workload-budget
+  timeout: 300
+  caBundle:
