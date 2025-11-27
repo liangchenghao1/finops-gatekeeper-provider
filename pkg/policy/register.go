@@ -18,6 +18,7 @@ var (
 	workloadBudgetValidator              *WorkloadBudgetValidator
 	workloadResourceUtilizationValidator *WorkloadResourceUtilizationValidator
 	workloadRecommendationValidator      *WorkloadRecommendationValidator
+	acsBillingValidator                  *ACSBillingValidator
 )
 
 // RegisterWebhooks 注册所有策略webhook
@@ -29,6 +30,7 @@ func RegisterWebhooks(logger logr.Logger, config *config.Config) {
 	workloadBudgetValidator = NewWorkloadBudgetValidator(logger)
 	workloadResourceUtilizationValidator = NewWorkloadResourceUtilizationValidator(logger, config)
 	workloadRecommendationValidator = NewWorkloadRecommendationValidator(logger)
+	acsBillingValidator = NewACSBillingValidator(logger, config)
 }
 
 // GetDefaultResourcesMutator 获取默认资源mutator
@@ -81,6 +83,8 @@ func RegisterWebhooksFromConfig(registry server.WebhookRegistry, cfg *config.Con
 			err = registry.RegisterValidatingWebhook(webhookCfg.Path, workloadResourceUtilizationValidator)
 		case webhookCfg.Type == "validating" && strings.Contains(webhookCfg.Name, "workload-recommendation"):
 			err = registry.RegisterValidatingWebhook(webhookCfg.Path, workloadRecommendationValidator)
+		case webhookCfg.Type == "validating" && strings.Contains(webhookCfg.Name, "acs-billing"):
+			err = registry.RegisterValidatingWebhook(webhookCfg.Path, acsBillingValidator)
 
 		default:
 			return fmt.Errorf("unknown webhook type or name: %s (%s)", webhookCfg.Name, webhookCfg.Type)
