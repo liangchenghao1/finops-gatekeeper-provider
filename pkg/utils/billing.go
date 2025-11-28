@@ -8,10 +8,12 @@ import (
 	bssopenapi "github.com/alibabacloud-go/bssopenapi-20171214/v4/client"
 	openapi "github.com/alibabacloud-go/darabonba-openapi/v2/client"
 	"github.com/alibabacloud-go/tea/tea"
+	"github.com/go-logr/logr"
 )
 
 type AlibabaCloudBillingClient struct {
 	client *bssopenapi.Client
+	logger logr.Logger
 }
 
 type AlibabaCloudBillingConfig struct {
@@ -23,7 +25,6 @@ type AlibabaCloudBillingConfig struct {
 type BillingQueryParams struct {
 	ProductCode string
 	TimeWindow  string
-	Namespace   string
 	ClusterID   string
 }
 
@@ -42,7 +43,7 @@ type BillingQueryResult struct {
 	TotalCount int32
 }
 
-func NewAlibabaCloudBillingClient(config AlibabaCloudBillingConfig) (*AlibabaCloudBillingClient, error) {
+func NewAlibabaCloudBillingClient(config AlibabaCloudBillingConfig, logger logr.Logger) (*AlibabaCloudBillingClient, error) {
 	if config.AccessKeyID == "" || config.AccessKeySecret == "" {
 		return nil, fmt.Errorf("AccessKeyID and AccessKeySecret are required")
 	}
@@ -62,7 +63,10 @@ func NewAlibabaCloudBillingClient(config AlibabaCloudBillingConfig) (*AlibabaClo
 		return nil, fmt.Errorf("failed to create alibabacloud billing client: %v", err)
 	}
 
-	return &AlibabaCloudBillingClient{client: client}, nil
+	return &AlibabaCloudBillingClient{
+		client: client,
+		logger: logger,
+	}, nil
 }
 
 func (c *AlibabaCloudBillingClient) QueryInstanceBilling(params BillingQueryParams) (*BillingQueryResult, error) {
@@ -86,6 +90,15 @@ func (c *AlibabaCloudBillingClient) QueryInstanceBilling(params BillingQueryPara
 	}
 
 	var nextToken *string
+
+	// 打印整体请求参数
+	c.logger.V(1).Info("[Billing API] calling DescribeInstanceBill",
+		"billingCycle", billingCycle,
+		"billingDate", billingDate,
+		"productCode", params.ProductCode,
+		"clusterID", params.ClusterID,
+	)
+
 	for {
 		request := &bssopenapi.DescribeInstanceBillRequest{
 			BillingCycle: tea.String(billingCycle),
@@ -98,6 +111,7 @@ func (c *AlibabaCloudBillingClient) QueryInstanceBilling(params BillingQueryPara
 
 		response, err := c.client.DescribeInstanceBill(request)
 		if err != nil {
+			c.logger.Error(err, "[Billing API] DescribeInstanceBill failed")
 			return nil, fmt.Errorf("failed to query instance billing: %v", err)
 		}
 
@@ -118,10 +132,7 @@ func (c *AlibabaCloudBillingClient) QueryInstanceBilling(params BillingQueryPara
 
 				tags := parseTags(tea.StringValue(item.Tag))
 
-				// 根据namespace和clusterID过滤
-				if params.Namespace != "" && tags["NameSpace"] != params.Namespace {
-					continue
-				}
+				// 根据 clusterID 过滤
 				if params.ClusterID != "" && tags["acs:acc:cluster_id"] != params.ClusterID {
 					continue
 				}
@@ -143,6 +154,18 @@ func (c *AlibabaCloudBillingClient) QueryInstanceBilling(params BillingQueryPara
 			break
 		}
 	}
+
+	// 计算总金额
+	var totalAmount float64
+	for _, item := range result.Items {
+		totalAmount += item.PretaxAmount
+	}
+
+	// 打印关键结果信息
+	c.logger.Info("[Billing API] query completed",
+		"itemCount", len(result.Items),
+		"totalAmount", totalAmount,
+	)
 
 	return result, nil
 }

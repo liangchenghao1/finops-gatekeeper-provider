@@ -48,7 +48,7 @@ func NewACSBillingValidator(logger logr.Logger, config *config.Config) *ACSBilli
 		AccessKeyID:     accessKeyID,
 		AccessKeySecret: accessKeySecret,
 		Endpoint:        endpoint,
-	})
+	}, logger)
 	if err != nil {
 		logger.Error(err, "failed to create alibabacloud billing client")
 		return &ACSBillingValidator{Logger: logger, billingClient: nil, clusterID: config.Cluster.ClusterID}
@@ -114,8 +114,16 @@ func (v *ACSBillingValidator) Validate(w http.ResponseWriter, req *http.Request)
 		}
 
 		var totalAmount float64
+		var currency string
 		for _, item := range result.Items {
 			totalAmount += item.PretaxAmount
+			if currency == "" && item.Currency != "" {
+				currency = item.Currency
+			}
+		}
+
+		if currency == "" {
+			currency = "CNY" // 默认值
 		}
 
 		responseData := map[string]interface{}{
@@ -125,7 +133,7 @@ func (v *ACSBillingValidator) Validate(w http.ResponseWriter, req *http.Request)
 			"clusterID":   v.clusterID,
 			"totalAmount": totalAmount,
 			"itemCount":   len(result.Items),
-			"currency":    "CNY",
+			"currency":    currency,
 		}
 		responseJSON, _ := json.Marshal(responseData)
 
