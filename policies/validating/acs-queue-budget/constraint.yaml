@@ -1,0 +1,18 @@
+apiVersion: constraints.gatekeeper.sh/v1beta1
+kind: ACSQueueBudgetValidator
+metadata:
+  name: acs-queue-budget-default
+spec:
+  enforcementAction: deny
+  match:
+    kinds:
+      - apiGroups:
+          - batch
+        kinds:
+          - Job
+    namespaces:
+      - default
+  parameters:
+    maxCost: 10
+    namespace: default
+    timeWindow: today

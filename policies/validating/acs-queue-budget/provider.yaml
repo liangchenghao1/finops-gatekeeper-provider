@@ -1,0 +1,8 @@
+apiVersion: externaldata.gatekeeper.sh/v1beta1
+kind: Provider
+metadata:
+  name: acs-billing-provider
+spec:
+  url: https://finops-gatekeeper-provider.kube-system:8090/validate/acs-billing
+  timeout: 30
+  caBundle:
