@@ -44,6 +44,14 @@ data:
         path: "/validate/workload-recommendation"
         type: "validating"
         enabled: true
+          
+      - name: "acs-billing-validator"
+        path: "/validate/acs-billing"
+        type: "validating"
+        enabled: true
 
     prometheus:
       url: ""
+      
+    cluster:
+      clusterId: ""
