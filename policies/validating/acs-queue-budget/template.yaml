@@ -1,0 +1,74 @@
+apiVersion: templates.gatekeeper.sh/v1beta1
+kind: ConstraintTemplate
+metadata:
+  name: acsqueuebudgetvalidator
+spec:
+  crd:
+    spec:
+      names:
+        kind: ACSQueueBudgetValidator
+      validation:
+        openAPIV3Schema:
+          type: object
+          properties:
+            namespace:
+              type: string
+              description: "Kubernetes 命名空间"
+            timeWindow:
+              type: string
+              description: "时间窗口: today, yesterday"
+              enum:
+                - today
+                - yesterday
+            maxCost:
+              type: number
+              description: "最大允许费用阈值"
+  targets:
+    - target: admission.k8s.gatekeeper.sh
+      rego: |
+        package admission
+
+        import future.keywords.in
+
+        # 当且仅当更新操作将 Job 的 spec.suspend 从 true 改为 false 时触发
+        violation[{"msg": msg}] {
+          input.review.operation == "UPDATE"
+
+          old := input.review.oldObject
+          new := input.review.object
+
+          # 旧值为 true，新值为 false（取消暂停）
+          old.spec.suspend == true
+          new.spec.suspend == false
+
+          # 参数
+          namespace := input.parameters.namespace
+          time_window := input.parameters.timeWindow
+          max_cost := input.parameters.maxCost
+
+          # 查询 key: "timeWindow:namespace"
+          query_key := sprintf("%s:%s", [time_window, namespace])
+
+          # 查询外部数据（ACS账单）
+          response := external_data({
+            "provider": "acs-billing-provider",
+            "keys": [query_key]
+          })
+
+          # 无错误
+          count(response.errors) == 0
+
+          # 解析响应
+          resp := response.responses[_]
+          bill_data_str := resp[1]
+          bill_data := json.unmarshal(bill_data_str)
+          total_cost := bill_data.totalAmount
+
+          # 超过阈值则拒绝取消暂停
+          total_cost >= max_cost
+
+          msg := sprintf(
+            "命名空间 %s 当前总费用 %v 元超过预算 %v 元，禁止将 Job suspend 置为 false",
+            [namespace, total_cost, max_cost]
+          )
+        }

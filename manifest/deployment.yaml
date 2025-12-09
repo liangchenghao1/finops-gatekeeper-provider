@@ -15,8 +15,19 @@ spec:
         app: finops-gatekeeper-provider
     spec:
       containers:
-        - image: registry.cn-hangzhou.aliyuncs.com/lch_test/finops-gatekeeper-provider:v0.1
+        - image: registry.cn-hangzhou.aliyuncs.com/lch_test/finops-gatekeeper-provider:v0.0.2
           imagePullPolicy: IfNotPresent
+          env:
+            - name: ALIBABACLOUD_ACCESS_KEY_ID
+              valueFrom:
+                secretKeyRef:
+                  name: alibabacloud-credentials
+                  key: accessKeyId
+            - name: ALIBABACLOUD_ACCESS_KEY_SECRET
+              valueFrom:
+                secretKeyRef:
+                  name: alibabacloud-credentials
+                  key: accessKeySecret
           volumeMounts:
             - name: tls
               mountPath: /certs

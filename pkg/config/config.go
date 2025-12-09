@@ -30,6 +30,12 @@ type PrometheusConfig struct {
 	URL string `json:"url" yaml:"url"`
 }
 
+// ClusterConfig 定义Cluster配置
+type ClusterConfig struct {
+	// ClusterID 集群ID
+	ClusterID string `json:"clusterId" yaml:"clusterId"`
+}
+
 // Config 定义完整的配置结构
 type Config struct {
 	// Server 服务器配置
@@ -40,4 +46,7 @@ type Config struct {
 
 	// Prometheus Prometheus配置
 	Prometheus PrometheusConfig `json:"prometheus" yaml:"prometheus"`
+
+	// Cluster Cluster配置
+	Cluster ClusterConfig `json:"cluster" yaml:"cluster"`
 }
