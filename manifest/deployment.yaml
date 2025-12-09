@@ -15,7 +15,7 @@ spec:
         app: finops-gatekeeper-provider
     spec:
       containers:
-        - image: registry.cn-hangzhou.aliyuncs.com/lch_test/finops-gatekeeper-provider:v0.0.2
+        - image: registry-cn-hangzhou.ack.aliyuncs.com/acs/finops-gatekeeper-provider:v0.0.2
           imagePullPolicy: IfNotPresent
           env:
             - name: ALIBABACLOUD_ACCESS_KEY_ID
